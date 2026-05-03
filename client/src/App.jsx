@@ -1,8 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
+// Firebase init — import sekali di sini agar aktif saat app load
+import "./config/firebase.js";
+
+import { AuthProvider } from "./context/AuthContext.jsx";
 import LoaderOverlay from "./components/LoaderOverlay";
+import ProtectedRoute from "./components/ProtectedRoute";
+import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
-import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardPage from "./pages/DashboardPage";
 import HasilSuara from "./pages/HasilSuara";
 import ProfilKandidat from "./pages/ProfilKandidat";
@@ -16,8 +22,6 @@ function ComingSoon({ page }) {
 	);
 }
 
-// Halaman yang butuh login dibungkus ProtectedRoute
-// Tambahkan requiredRole="admin" untuk halaman khusus panitia
 const PROTECTED = [
 	{ path: "/dashboard", element: <DashboardPage /> },
 	{ path: "/hasil", element: <HasilSuara /> },
@@ -28,30 +32,29 @@ const PROTECTED = [
 
 export default function App() {
 	return (
-		<>
-			<LoaderOverlay />
-			<BrowserRouter>
-				<Routes>
-					{/* Public routes */}
-					<Route path="/login" element={<LoginPage />} />
-					<Route path="/register" element={<RegisterPage />} />
+		<AuthProvider>
+			<>
+				<LoaderOverlay />
+				<BrowserRouter>
+					<Routes>
+						{/* Public routes */}
+						<Route path="/" element={<LandingPage />} />
+						<Route path="/login" element={<LoginPage />} />
+						<Route path="/register" element={<RegisterPage />} />
 
-					{/* Default redirect */}
-					<Route path="/" element={<Navigate to="/dashboard" replace />} />
+						{/* Protected routes */}
+						{PROTECTED.map(({ path, element }) => (
+							<Route
+								key={path}
+								path={path}
+								element={<ProtectedRoute>{element}</ProtectedRoute>}
+							/>
+						))}
 
-					{/* Protected routes */}
-					{PROTECTED.map(({ path, element }) => (
-						<Route
-							key={path}
-							path={path}
-							element={<ProtectedRoute>{element}</ProtectedRoute>}
-						/>
-					))}
-
-					{/* 404 fallback */}
-					<Route path="*" element={<Navigate to="/dashboard" replace />} />
-				</Routes>
-			</BrowserRouter>
-		</>
+						<Route path="*" element={<Navigate to="/" replace />} />
+					</Routes>
+				</BrowserRouter>
+			</>
+		</AuthProvider>
 	);
 }
